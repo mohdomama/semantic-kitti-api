@@ -183,10 +183,13 @@ if __name__ == '__main__':
   progress = 10
   count = 0
   print("Evaluating sequences: ", end="", flush=True)
-  breakpoint()
   # open each file, get the tensor, and make the iou comparison
+  
+  label_count = np.zeros(20)
+  
+  pred_count = np.zeros(20)
+  
   for label_file, pred_file, mask_file in zip(label_names, pred_names, pred_masks):
-    print(count)
     count += 1
     if 100 * count / len(label_names) > progress:
       print("{:d}% ".format(progress), end="", flush=True)
@@ -213,12 +216,12 @@ if __name__ == '__main__':
     label = label[mask>0]
     pred = pred[mask>0].astype(int)
 
+    label_count[label]+=1
+
+    pred_count[pred]+=1
     # add single scan to evaluation
     evaluator.addBatch(pred, label)
     
-    # TODO: Remove later
-    if count > 600:
-      break
 
   # when I am done, print the evaluation
   m_accuracy = evaluator.getacc()
@@ -246,6 +249,11 @@ if __name__ == '__main__':
   sys.stdout.write('{acc:.3f}'.format(acc=m_accuracy.item()))
   sys.stdout.write('\n')
   sys.stdout.flush()
+
+  for i in range(20):
+      print(f'For Class {i}-> Label Count: {label_count[i]} | Pred Count: {pred_count[i]}')
+
+
 
   # if codalab is necessary, then do it
   if FLAGS.codalab is not None:
